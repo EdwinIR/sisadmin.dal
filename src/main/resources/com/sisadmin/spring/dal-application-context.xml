@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+		xmlns:tx="http://www.springframework.org/schema/tx"
+	    xmlns:context="http://www.springframework.org/schema/context"	    
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"		
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+        http://www.springframework.org/schema/data/jpa
+   		http://www.springframework.org/schema/data/jpa/spring-jpa-1.0.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+    
+
+    <!--
+        Ensures that dispatcher servlet can be mapped to '/' and static resources
+        are still served by the containers default servlet. Requires Spring Framework
+        3.0 or higher. 
+    -->
+   
+	
+    <!--
+        Configures Spring Data JPA and sets the base package of my DAOs.
+    -->
+    
+  	<!-- BoneCP configuration -->
+    <bean id="myDataSource" class="com.jolbox.bonecp.BoneCPDataSource" destroy-method="close">
+        <property name="driverClass" value="${db.driver}" />
+        <property name="jdbcUrl" value="${db.url}" />
+        <property name="username" value="${db.username}"/>
+        <property name="password" value="${db.password}"/>
+        <property name="idleConnectionTestPeriodInMinutes" value="${db.idleperiod}"/>
+        <property name="idleMaxAgeInMinutes" value="${db.idlemax}"/>
+        <property name="maxConnectionsPerPartition" value="${db.maxconn}"/>
+        <property name="minConnectionsPerPartition" value="${db.minconn}"/>
+        <property name="partitionCount" value="${db.partitioncount}"/>
+        <property name="acquireIncrement" value="${db.acquireinc}"/>
+        <property name="statementsCacheSize" value="${db.statementcachesize}"/>
+        <property name="releaseHelperThreads" value="${db.releasethreads}"/>
+    </bean>
+    
+  	<!-- Add JPA support -->
+    <bean id="myEntityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="persistenceUnitName" value="sisadmin" />
+		<property name="dataSource" ref="myDataSource" />
+		<property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+                <property name="databasePlatform" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            </bean>
+        </property>						
+	</bean>
+    
+    <bean id="mytx" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="myEntityManagerFactory" />
+	</bean>
+	
+    <jpa:repositories base-package="com.sisadmin.repository"     	
+    			transaction-manager-ref ="mytx" 
+    			entity-manager-factory-ref="myEntityManagerFactory" />
+    <tx:annotation-driven transaction-manager="mytx" />
+	
+	<context:component-scan base-package="com.sisadmin" />
+  	
+</beans>
